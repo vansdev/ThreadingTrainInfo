@@ -104,7 +104,7 @@ def price_write_process(train, ticket_info):
         train_id = train['station_train_code']
         train_info_ordered_dict[train_id].set_ticket_info(ticket_info)
 
-# this is func of working thread
+# 工作线程的工作函数
 def t_ticket():
     global task_queue
     global count
@@ -120,7 +120,7 @@ def t_ticket():
             price_write_process(train, ticket_info)
             lock.release()
 
-# this is the thread controller
+# 线程控制器
 def process_ticket_info_all(train_list_raw):
     global task_queue
     task_queue = Queue()
@@ -128,6 +128,7 @@ def process_ticket_info_all(train_list_raw):
         task_queue.put(train)
     threads = []
 
+    # threads 列表的元素是线程 线程的方法是 t_ticket
     for i in range(MAX_THREAD_NUM):
         threads.append(threading.Thread(target=t_ticket))
 
@@ -139,7 +140,7 @@ def process_ticket_info_all(train_list_raw):
 
     print 'Ticket info for all trains processed.'
 
-
+# 用PrettyTable打印结果
 def visualize():
     output = PrettyTable(['车次', '出发站', '到达站', '出发时刻', '到达时刻', '历时', '一等座', '二等座', '软卧', '硬卧', '硬座', '无座'])
     for item in train_info_ordered_dict.itervalues():
