@@ -22,6 +22,7 @@ def get_station_code(name, src):
     pattern = re.compile(name + r'\|([A-Z]{3})')
     return pattern.search(src).group(1)
 
+
 # 用url体和查询参数构造查询url  理想情况下用requests的params可以直接达到一样的效果 不需要此函数
 # 但实际发现本例 requests用params时不能正确返回数据(可能由于12306的ssl 不清楚) 只好写了这个函数...
 def build_query_url(base, args): # base 和 args 为iterable 长度一致

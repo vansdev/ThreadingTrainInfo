@@ -18,6 +18,7 @@ class TrainInfo(object):
         self._time_lapse = time_lapse
         self._ticket_info = None
 
+    # 用price_query得到的ticket_info 更新TrainInfo实例的 self._ticket_info 属性
     def set_ticket_info(self, ticket_info):
         self._ticket_info = ticket_info
 

@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-
 import json
 import threading
 from collections import OrderedDict
@@ -15,17 +14,19 @@ from TrainInfo import TrainInfo
 from my_tools import valid_date, get_station_code, build_query_url
 
 
-global train_info_ordered_dict
-global task_queue
+global train_info_ordered_dict # 存储最终数据的有序字典  train_id:TrainInfo
+global task_queue # 多线程的任务队列 由train_list_raw构造
 count = 0
 MAX_THREAD_NUM = 16
-lock = threading.Lock()
+lock = threading.Lock() # 锁 控制线程对 有序字典 的写操作
 
+# 用于获得 某 座型 在 price_query 的结果中(json解析得到的字典)对应的key 之后用得到的key查询票价
+# 例如 一等座 在 price_query 返回的字典中 对应key 为 'M' 用'M'做key 可以查询一等座票价 然后加入余票信息字典
 ticket_price_mapping = {'z1' : 'M', 'z2' : 'O', 'wr' : 'A4', 'wy' : 'A3', 'zy' : 'A1', 'zw' : 'WZ'}
 
-
+# 构造train_list_raw 后续任务的基础
 def get_list_raw(from_station_name, to_station_name, ride_date):
-    # 将输入地名转换为 余票查询所使用的 站点代码
+    # 将输入地名转换为站点代码
     with open('station_name.data') as f:
         content = f.read()
         from_station_code = get_station_code(from_station_name, content)
@@ -49,6 +50,7 @@ def get_list_raw(from_station_name, to_station_name, ride_date):
 
     return train_list_raw
 
+# 初始化  train_info_ordered_dict 该函数结束时  所有车次的信息(除票价外) 已经记录在 train_info_ordered_dict 中
 def init_result_ordered_dict(train_list_raw):
     global train_info_ordered_dict
     train_info_ordered_dict = OrderedDict()
@@ -63,7 +65,7 @@ def init_result_ordered_dict(train_list_raw):
 
             train_info_ordered_dict[train_id] = TrainInfo(train_id, from_station_name, to_station_name,
                                                           start_time, arrive_time, time_lapse)
-
+# 线程中 网络I/O 部分的操作 得到某个车次的票价信息
 def price_network_process(train):
     if train['controlled_train_flag'] == '0':
         train_no = train['train_no']
@@ -98,6 +100,7 @@ def price_network_process(train):
     else:
         return None
 
+# 线程中对共享数据  train_info_ordered_dict 的操作 更新某个车次的票价信息
 def price_write_process(train, ticket_info):
     if train['controlled_train_flag'] == '0':
         global train_info_ordered_dict
@@ -147,20 +150,21 @@ def visualize():
         output.add_row(item.add_to_table())
     print output
 
+
 def main():
     from_station_name = raw_input('from: ')
     to_station_name = raw_input('to: ')
     ride_date = raw_input('date: ')
 
-    filterwarnings('ignore', category=urllib3.exceptions.InsecureRequestWarning)
-    start = clock()
+    filterwarnings('ignore', category=urllib3.exceptions.InsecureRequestWarning) # 不打印警告
+    start = clock() #计时器
 
     if valid_date(ride_date):
 
-        train_list_raw = get_list_raw(from_station_name, to_station_name, ride_date)
-        init_result_ordered_dict(train_list_raw)
-        process_ticket_info_all(train_list_raw)
-        visualize()
+        train_list_raw = get_list_raw(from_station_name, to_station_name, ride_date) # 构造train_list_raw
+        init_result_ordered_dict(train_list_raw) # 用train_list_raw 构造 train_info_ordered_dict
+        process_ticket_info_all(train_list_raw) # 为所有车次增加票价信息
+        visualize() # 打印
 
     else:
         pass
