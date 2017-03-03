@@ -6,6 +6,9 @@ from Queue import Queue, Empty
 from time import clock
 from warnings import filterwarnings
 
+import multiprocessing
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 import requests
 from prettytable import PrettyTable
 from requests.packages import urllib3
@@ -15,7 +18,6 @@ from my_tools import valid_date, get_station_code, build_query_url
 
 
 global train_info_ordered_dict # 存储最终数据的有序字典  train_id:TrainInfo
-global task_queue # 多线程的任务队列 由train_list_raw构造
 count = 0
 MAX_THREAD_NUM = 16
 lock = threading.Lock() # 锁 控制线程对 有序字典 的写操作
@@ -108,38 +110,33 @@ def price_write_process(train, ticket_info):
         train_info_ordered_dict[train_id].set_ticket_info(ticket_info)
 
 # 工作线程的工作函数
-def t_ticket():
+def t_ticket(train):
     global task_queue
     global count
-    while True:
-        try:
-            train = task_queue.get(False)
-        except Empty:
-            break
-        ticket_info = price_network_process(train)
-        if lock.acquire():
-            # print 'thread %s is writing' % threading.current_thread().getName()
-            count += 1
-            price_write_process(train, ticket_info)
-            lock.release()
+
+    ticket_info = price_network_process(train)
+    price_write_process(train, ticket_info)
+
 
 # 线程控制器
 def process_ticket_info_all(train_list_raw):
-    global task_queue
-    task_queue = Queue()
-    for train in train_list_raw:
-        task_queue.put(train)
-    threads = []
 
-    # threads 列表的元素是线程 线程的方法是 t_ticket
-    for i in range(MAX_THREAD_NUM):
-        threads.append(threading.Thread(target=t_ticket))
 
-    for t in threads:
-        t.start()
+    futures = set()
+    with ThreadPoolExecutor(multiprocessing.cpu_count() * 4) as executor:
+        for train in train_list_raw:
+            future = executor.submit(t_ticket, train)
+            futures.add(future)
 
-    for t in threads:
-        t.join()
+    try:
+        for future in as_completed(futures):
+            err = future.exception()
+            if err is not None:
+                raise err
+    except KeyboardInterrupt:
+        print 'Stopped by user.'
+
+
 
     print 'Ticket info for all trains processed.'
 
