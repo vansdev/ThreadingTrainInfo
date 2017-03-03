@@ -1,17 +1,17 @@
-# -*- coding: UTF-8 -*-
-# import requests
-#
-# params = {'leftTicketDTO.train_date':'2017-03-03',
-#           'leftTicketDTO.from_station':'HBB', 'leftTicketDTO.to_station':'KMM',
-#           'purpose_codes':'ADULT'}
+# # -*- coding: UTF-8 -*-
+# # import requests
 # #
-# # r = requests.get('https://kyfw.12306.cn/otn/leftTicket/query?leftTicketDTO.train_date='+'2017-03-03'
-# #                  +'&leftTicketDTO.from_station='+'SHH'+'&leftTicketDTO.to_station='+'KMM'
-# #                  +'&purpose_codes=ADULT', verify=False)
-# r = requests.get('https://kyfw.12306.cn/otn/leftTicket/query',params=params,verify=False)
-# print r.content
-
-
+# # params = {'leftTicketDTO.train_date':'2017-03-03',
+# #           'leftTicketDTO.from_station':'HBB', 'leftTicketDTO.to_station':'KMM',
+# #           'purpose_codes':'ADULT'}
+# # #
+# # # r = requests.get('https://kyfw.12306.cn/otn/leftTicket/query?leftTicketDTO.train_date='+'2017-03-03'
+# # #                  +'&leftTicketDTO.from_station='+'SHH'+'&leftTicketDTO.to_station='+'KMM'
+# # #                  +'&purpose_codes=ADULT', verify=False)
+# # r = requests.get('https://kyfw.12306.cn/otn/leftTicket/query',params=params,verify=False)
+# # print r.content
+#
+#
 import random
 from time import sleep
 from Queue import Queue, Empty
@@ -67,3 +67,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
